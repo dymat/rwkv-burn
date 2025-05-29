@@ -78,8 +78,8 @@ cargo run --release -- \
 | `-t`, `--temperature`       | Temperature for token sampling        | `0.6`       |
 | `-p`, `--top_p`             | Top-p sampling parameter              | `0.6`       |
 | `-k`, `--top_k`             | Top-k sampling parameter              | `50`        |
-| ``, `--inference_mode`      | Parallel, RNN, Mixed                  | `Mixed`     |
-| ``, `--tokenizer_vocab_file`| Path to tokenizer vocab file          | `rwkv_vocab_v20230424.txt` |
+| `--inference_mode`          | Parallel, RNN, Mixed                  | `Mixed`     |
+| `--tokenizer_vocab_file`    | Path to tokenizer vocab file          | `rwkv_vocab_v20230424.txt` |
 
 
 ## 🛠️ Developer Notes
