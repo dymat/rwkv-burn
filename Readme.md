@@ -122,6 +122,7 @@ This project is under active development. Below are the planned features and imp
 - [ ] Save and load model states (checkpointing)  
 - [ ] Model quantization for faster inference and smaller memory footprint  
 - [ ] Implement batch generation support
+- [ ] Write tests  
 - [ ] Improve sampling strategies (temperature annealing, beam search)  
 
 #### Long-term Goals
