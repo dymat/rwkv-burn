@@ -1,0 +1,15 @@
+[package]
+name = "burn-rwkv-v7"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+burn = { version = "0.17.0", features = ["wgpu", "ndarray", "tch"] }
+clap = { version = "4.5.38", features = ["derive"] }
+rand = "0.9.1"
+rwkv-tokenizer = "0.9.1"
+safetensors = "0.5.3"
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
