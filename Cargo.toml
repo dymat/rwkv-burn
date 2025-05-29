@@ -1,5 +1,5 @@
 [package]
-name = "burn-rwkv-v7"
+name = "rwkv-burn"
 version = "0.1.0"
 edition = "2024"
 
