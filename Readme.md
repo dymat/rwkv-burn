@@ -135,6 +135,7 @@ This project is under active development. Below are the planned features and imp
 - RWKV original repository: https://github.com/BlinkDL/RWKV-LM
 - RWKV project website with many more ressources: https://www.rwkv.com/
 - RWKV v7 paper: https://arxiv.org/abs/2503.14456
+- Valuable re-implementation of RWKV models with focus on readability rather than performance: https://github.com/SmerkyG/RWKV_Explained
 
 ### Community and Contribution
 
