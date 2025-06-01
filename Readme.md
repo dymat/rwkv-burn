@@ -1,6 +1,6 @@
 # RWKVv7 CLI Inference (Burn Framework)
 
-> A port of the [RWKV v7](https://github.com/BlinkDL/RWKV-LM/tree/main/RWKV-v7) language model, implemented in [Rust](https://www.rust-lang.org/) with the [Burn](https://burn.dev) deep learning framework.
+> A port of the [RWKV v7](https://github.com/BlinkDL/RWKV-LM/tree/main/RWKV-v7) language model (100% attention free), implemented in [Rust](https://www.rust-lang.org/) with the [Burn](https://burn.dev) deep learning framework.
 
 ![rwkv](https://img.shields.io/badge/RWKV-v7-blue)
 ![burn](https://img.shields.io/badge/Burn-ML%20Framework-orange)
@@ -78,8 +78,8 @@ cargo run --release -- \
 | `-t`, `--temperature`       | Temperature for token sampling        | `0.6`       |
 | `-p`, `--top_p`             | Top-p sampling parameter              | `0.6`       |
 | `-k`, `--top_k`             | Top-k sampling parameter              | `50`        |
-| `--inference_mode`          | Parallel, RNN, Mixed                  | `Mixed`     |
-| `--tokenizer_vocab_file`    | Path to tokenizer vocab file          | `rwkv_vocab_v20230424.txt` |
+| ``, `--inference_mode`      | Parallel, RNN, Mixed                  | `Mixed`     |
+| ``, `--tokenizer_vocab_file`| Path to tokenizer vocab file          | `rwkv_vocab_v20230424.txt` |
 
 
 ## 🛠️ Developer Notes
@@ -97,7 +97,7 @@ This project implements a minimal RWKV-v7 model inference pipeline using the [Bu
 ### Supported Features
 
 - 🔄 RNN-style token-by-token generation
-- 🔥 Top-k sampling (Top-p planned)
+- 🔥 Top-k andTop-p sampling
 - 🧠 Inference state caching across generations
 - 🎛 CLI configuration for model size, heads, tokenizer, weights
 
@@ -112,7 +112,7 @@ This project is under active development. Below are the planned features and imp
 - [x] Sequential token-by-token text generation  
 - [x] CLI interface with configurable parameters  
 - [x] Integration with `rwkv-tokenizer`  
-- [ ] Investigate poor performance on larger models (e.g. 1.5B)
+- [ ] Investigate poor performance on larger models (e.g. 0.4B, 1.5B)
 - [ ] Implement parallel generation mode  
 - [ ] Improve support for additional backends (e.g. WGPU); Inference with WGPU seems numerically unstable and produces bad results
 
@@ -122,7 +122,6 @@ This project is under active development. Below are the planned features and imp
 - [ ] Save and load model states (checkpointing)  
 - [ ] Model quantization for faster inference and smaller memory footprint  
 - [ ] Implement batch generation support
-- [ ] Write tests  
 - [ ] Improve sampling strategies (temperature annealing, beam search)  
 
 #### Long-term Goals
@@ -132,6 +131,11 @@ This project is under active development. Below are the planned features and imp
 - [ ] Model export to ONNX and interoperability with other frameworks  
 - [ ] Web-based interface and API service for model inference  
 
+### Ressources
+- RWKV original repository: https://github.com/BlinkDL/RWKV-LM
+- RWKV project website with many more ressources: https://www.rwkv.com/
+- RWKV v7 paper: https://arxiv.org/abs/2503.14456
+
 ### Community and Contribution
 
 Contributions and feedback are welcome!  
@@ -139,4 +143,4 @@ Feel free to open issues or submit pull requests for any feature requests or bug
 
 ---
 
-_Last updated: 2025-05-26_
+_Last updated: 2025-06-01_
