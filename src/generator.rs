@@ -7,7 +7,7 @@ use burn::{
     prelude::*,
     tensor::{DType, Tensor, activation},
 };
-use rand::Rng;
+use rand::prelude::*;
 use rwkv_tokenizer::WorldTokenizer;
 
 use crate::model::{LayerState, RWKVv7};
@@ -33,6 +33,7 @@ pub struct Generator<'a, B: Backend> {
     top_k: usize,
     top_p: f32,
     temperature: f32,
+    rng: rand::rngs::ThreadRng,
 }
 
 impl<'a, B: Backend> Generator<'a, B> {
@@ -53,6 +54,7 @@ impl<'a, B: Backend> Generator<'a, B> {
             top_k,
             top_p,
             temperature,
+            rng: rand::rng(),
         }
     }
 
@@ -90,13 +92,19 @@ impl<'a, B: Backend> Generator<'a, B> {
         max_new_tokens: usize,
         state: Option<Vec<LayerState<B>>>,
     ) -> (String, Option<Vec<LayerState<B>>>) {
+
+        // apply prompt template
+        let prompt = format!("User: {}\n\nAssistant:", prompt.trim());
         
+        // inference mode selection
         match self.inference_mode {
+            // transformer like inference (slow)
             InferenceMode::Parallel => {
-                let (completion, state) = self.generate_parallel(prompt, max_new_tokens);
+                let (completion, state) = self.generate_parallel(&prompt, max_new_tokens);
 
                 (completion, Some(state))
             },
+            // RNN like inference (fast)
             InferenceMode::Sequential => {
                 let mut _state: Vec<LayerState<B>>;
 
@@ -106,18 +114,20 @@ impl<'a, B: Backend> Generator<'a, B> {
                     _state = self.model.get_init_state();
                 }
 
-                let (completion, _state) = self.generate_sequential(prompt, max_new_tokens, _state);
+                let (completion, _state) = self.generate_sequential(&prompt, max_new_tokens, _state);
 
                 (completion, Some(_state))
             },
+            // mixed inference (default)
+            // first parallel, then sequential
             InferenceMode::Mixed => {
                 if let Some(state) = state {
-                    let (completion, state) = self.generate_sequential(prompt, max_new_tokens, state);
+                    let (completion, state) = self.generate_sequential(&prompt, max_new_tokens, state);
 
                     (completion, Some(state))
 
                 } else {
-                    let (completion, state) = self.generate_parallel(prompt, 1);
+                    let (completion, state) = self.generate_parallel(&prompt, 1);
                     let (completion, state) = self.generate_sequential(&completion, max_new_tokens-1, state);
 
                     (completion, Some(state))
@@ -189,7 +199,7 @@ impl<'a, B: Backend> Generator<'a, B> {
         for token in x {
             (y, state) = self.model.forward_rnn(token, state);
 
-            if let (Ok(string), token, _) = self.decode_single(y) {
+            if let (Ok(string), token, _) = self.sample_next_token(y) {
                 last_token = token as i32;
                 out = string;
             }
@@ -200,7 +210,7 @@ impl<'a, B: Backend> Generator<'a, B> {
         for _ in 0..max_new_tokens {
             (y, state) = self.model.forward_rnn(last_token, state);
 
-            if let (Ok(string), token, _) = self.decode_single(y) {
+            if let (Ok(string), token, _) = self.sample_next_token(y) {
                 last_token = token as i32;
                 out += &string;
 
@@ -239,7 +249,7 @@ impl<'a, B: Backend> Generator<'a, B> {
         for _ in 0..max_new_tokens {
             let x = self.prompt_to_tensor(&out);
             (y, state) = self.model.forward_parallel(x);
-            if let (Ok(string), token, _) = self.decode_single(y.reshape([-1])) {
+            if let (Ok(string), token, _) = self.sample_next_token(y.reshape([-1])) {
                 out += &string;
 
                 print!("{}", &string);
@@ -261,9 +271,9 @@ impl<'a, B: Backend> Generator<'a, B> {
     ///
     /// # Returns
     /// A tuple containing:
-    /// * A vector of token candidates.
-    /// * A vector of their corresponding probabilities.
-    fn sample_tokens(&self, tensor: Tensor<B, 1>) -> (Vec<u16>, Vec<f32>) {
+    /// * A sampled token.
+    /// * The corresponding probability.
+    fn sample_next_token(&mut self, tensor: Tensor<B, 1>) -> (Result<String, Utf8Error>, u16, f32) {
         let mut result: Tensor<B, 1> = tensor;
         let indices: Tensor<B, 1, Int>;
 
@@ -308,32 +318,30 @@ impl<'a, B: Backend> Generator<'a, B> {
             }
         }
 
-        (tokens, probs)
+        // multinomial sampling
+        let items: Vec<(u16, f32)> = tokens.into_iter()
+            .zip(probs.into_iter())
+            .collect();
+
+        let choice = items
+            .choose_weighted(&mut self.rng, |item| item.1);
+
+        if let Ok((token, prob)) = choice {
+            (
+                self.tokenizer.decode(vec![*token]), 
+                *token, 
+                *prob
+            )
+        } else {
+            // Fallback in case of sampling failure
+            let token = items[0].0;
+            let prob = items[0].1;
+            
+            (
+                self.tokenizer.decode(vec![token]),
+                token,
+                prob,
+            )
+        }
     }
-
-    /// Decodes a single token from a logits tensor using sampling.
-    ///
-    /// # Arguments
-    /// * `tensor` - A 1D tensor of logits.
-    ///
-    /// # Returns
-    /// A tuple `(decoded_string, token_id, probability)`.
-    fn decode_single(&self, tensor: Tensor<B, 1>) -> (Result<String, Utf8Error>, u16, f32) {
-        let (tokens, probs) = self.sample_tokens(tensor);
-        let i = random_usize(tokens.len());
-
-        (self.tokenizer.decode(vec![tokens[i]]), tokens[i], probs[i])
-    }
-}
-
-/// Randomly selects an index in `[0, n)` using the global RNG.
-///
-/// # Arguments
-/// * `n` - The upper bound (exclusive) for sampling.
-///
-/// # Returns
-/// A random index within the specified range.
-fn random_usize(n: usize) -> usize {
-    let mut rng = rand::rng();
-    rng.random_range(0..n)
 }
