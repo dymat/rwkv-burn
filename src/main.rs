@@ -170,7 +170,7 @@ fn main() {
 
     // Interactive loop
     loop {
-        print!("Prompt: ");
+        print!("User: ");
         let _ = io::stdout().flush();
 
         let mut input = String::new();
@@ -194,7 +194,7 @@ fn main() {
                 print!("Assistant: ");
                 let _ = io::stdout().flush();
 
-                (_, state) = generator.generate(trimmed_input, 128, state);
+                (_, state) = generator.generate(trimmed_input, 64, state);
             }
             Err(e) => println!("Could not read input: {}", e),
         }
