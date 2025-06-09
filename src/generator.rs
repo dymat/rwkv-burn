@@ -264,7 +264,8 @@ impl<'a, B: Backend> Generator<'a, B> {
         (out, state)
     }
 
-    /// Samples tokens from a model output distribution using temperature and top-k filtering.
+    /// Samples the next token from a model output distribution using temperature, top-k and top-p filtering
+    /// and multinomial sampling.
     ///
     /// # Arguments
     /// * `tensor` - A 1D tensor representing the logits.
